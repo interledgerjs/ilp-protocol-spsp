@@ -26,7 +26,7 @@ const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
 //   destinationAccount: 'test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I',
-//   sharedSecret: 'UguegcREX6fx7opVP2dRK2ALPCZ2xTBj9lFmdhlx4is',
+//   sharedSecret: <Buffer 55 67 75 65 67 63 52 45 58 36 66 78 37 6f 70 56 ...>,
 //   balance: {
 //     maximum: '1000000',
 //     current: '0'
