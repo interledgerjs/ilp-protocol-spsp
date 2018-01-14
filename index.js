@@ -25,7 +25,7 @@ async function query (receiver) {
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint, {
-    headers: { accept: 'application/x-spsp-response, application/json;q0.9' }
+    headers: { accept: 'application/spsp+json' }
   })
   const json = await response.json()
 
