@@ -31,7 +31,7 @@ async function query (receiver) {
 
   return toCamelCase({
     destination_account: json.destination_account,
-    shared_secret: json.shared_secret,
+    shared_secret: Buffer.from(json.shared_secret, 'base64'),
     balance: json.balance,
     ledger_info: json.ledger_info,
     receiver_info: json.receiver_info
@@ -44,12 +44,17 @@ async function pay (plugin, {
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
-  const query = await query(receiver)
+  const response = await query(receiver)
   return sendSingleChunk(plugin, {
-    destinationAccount: query.destinationAccount,
-    sharedSecret: query.sharedSecret,
+    destinationAccount: response.destinationAccount,
+    sharedSecret: response.sharedSecret,
     minDestinationAmount: '0',
     lastChunk: true,
     sourceAmount
   })
+}
+
+module.exports = {
+  query,
+  pay
 }
