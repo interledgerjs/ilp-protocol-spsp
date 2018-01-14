@@ -4,9 +4,10 @@ const fetch = require('node-fetch')
 
 // utility function for converting query response
 function toCamelCase (obj) {
+  if (obj === null) return null
   let res = {}
   for (const key of Object.keys(obj)) {
-    if (!obj[key]) continue
+    if (obj[key] === undefined) continue
     res[camelCase(key)] = typeof obj.key === 'object'
       ? toCamelCase(obj[key])
       : obj[key]
