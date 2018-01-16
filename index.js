@@ -19,7 +19,7 @@ async function query (receiver) {
   // TODO: further validation required on payment-pointer?
   // TODO: continue to support the old webfinger acct style?
   const endpoint = receiver.startsWith('$')
-    ? 'https://' + receiver.substring(1)
+    ? 'https://spsp.' + receiver.substring(1)
     : receiver
  
   // TODO: make sure that this fetch can never crash this node process. because
