@@ -44,6 +44,7 @@ async function pay (plugin, {
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
+  await plugin.connect()
   const response = await query(receiver)
   return sendSingleChunk(plugin, {
     destinationAccount: response.destinationAccount,
