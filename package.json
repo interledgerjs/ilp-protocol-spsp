@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ilp-protocol-psk2": "^0.1.0",
+    "ilp-protocol-psk2": "^0.2.0",
     "lodash.camelcase": "^4.3.0",
     "node-fetch": "^1.7.3"
   }
