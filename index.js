@@ -1,4 +1,5 @@
 const { sendSingleChunk } = require('ilp-protocol-psk2')
+const { URL } = require('url')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
 
@@ -18,13 +19,17 @@ function toCamelCase (obj) {
 async function query (receiver) {
   // TODO: further validation required on payment-pointer?
   // TODO: continue to support the old webfinger acct style?
-  const endpoint = receiver.startsWith('$')
-    ? 'https://spsp.' + receiver.substring(1)
-    : receiver
+  const endpoint = new URL(receiver.startsWith('$')
+    ? 'https://' + receiver.substring(1)
+    : receiver)
+
+  endpoint.pathname = endpoint.pathname === '/'
+    ? '/.well-known/pay'
+    : endpoint.pathname
  
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
-  const response = await fetch(endpoint, {
+  const response = await fetch(endpoint.href, {
     headers: { accept: 'application/spsp+json' }
   })
   const json = await response.json()
