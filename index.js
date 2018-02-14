@@ -50,9 +50,24 @@ async function pay (plugin, {
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
-  await plugin.connect()
-  const desiredBalance = new BigNumber(sourceAmount).negated()
   const response = await query(receiver)
+
+  let amount = sourceAmount
+  if (!amount) {
+    if (!response.balance && typeof response.balance === 'object') {
+      throw new Error('receiver must be an invoice ' +
+        'OR sourceAmount must be specified. ' +
+        'response=' + JSON.stringify(response))
+    }
+
+    amount = response.balance.minimum
+      ? response.balance.minimum + response.balance.current
+      : response.balance.maximum - response.balance.current
+  }
+
+  const desiredBalance = new BigNumber(amount).negated()
+
+  await plugin.connect()
   const socket = createSocket({
     plugin,
     destinationAccount: response.destinationAccount,
