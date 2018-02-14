@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bignumber.js": "^6.0.0",
+    "ilp-protocol-paystream": "git+https://github.com/emschwartz/ilp-protocol-paystream.git",
     "ilp-protocol-psk2": "^0.2.0",
     "lodash.camelcase": "^4.3.0",
     "node-fetch": "^1.7.3"

@@ -1,5 +1,6 @@
-const { sendSingleChunk } = require('ilp-protocol-psk2')
+const { createSocket } = require('ilp-protocol-paystream')
 const { URL } = require('url')
+const BigNumber = require('bignumber.js')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
 
@@ -50,13 +51,22 @@ async function pay (plugin, {
   // TODO: do we need application data?
 }) {
   await plugin.connect()
+  const desiredBalance = new BigNumber(sourceAmount).negated()
   const response = await query(receiver)
-  return sendSingleChunk(plugin, {
+  const socket = createSocket({
+    plugin,
     destinationAccount: response.destinationAccount,
-    sharedSecret: response.sharedSecret,
-    minDestinationAmount: '0',
-    lastChunk: true,
-    sourceAmount
+    sharedSecret: response.sharedSecret
+  })
+
+  socket.setMinAndMaxBalance(desiredBalance.toString())
+  return new Promise(resolve => {
+    socket.on('chunk', () => {
+      if (desiredBalance.gte(socket.balance)) {
+        socket.close()
+        resolve()
+      }
+    })
   })
 }
 
