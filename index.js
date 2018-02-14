@@ -31,7 +31,7 @@ async function query (receiver) {
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint.href, {
-    headers: { accept: 'application/spsp+json' }
+    headers: { accept: 'application/spsp4+json' }
   })
   const json = await response.json()
 
@@ -68,7 +68,7 @@ async function pay (plugin, {
   const desiredBalance = new BigNumber(amount).negated()
 
   await plugin.connect()
-  const socket = createSocket({
+  const socket = await createSocket({
     plugin,
     destinationAccount: response.destinationAccount,
     sharedSecret: response.sharedSecret
