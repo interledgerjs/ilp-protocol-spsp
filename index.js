@@ -27,7 +27,7 @@ async function query (receiver) {
   endpoint.pathname = endpoint.pathname === '/'
     ? '/.well-known/pay'
     : endpoint.pathname
- 
+
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint.href, {
