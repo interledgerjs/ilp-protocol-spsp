@@ -77,9 +77,13 @@ async function pay (plugin, {
   socket.setMinAndMaxBalance(desiredBalance.toString())
   return new Promise(resolve => {
     socket.on('chunk', () => {
-      if (desiredBalance.gte(socket.balance)) {
-        socket.close()
-        resolve()
+      if (desiredBalance.lt(0)
+        ? desiredBalance.gte(socket.balance)
+        : desiredBalance.lte(socket.balance)) {
+          setImmediate(() => {
+            socket.close()
+            resolve()
+          })
       }
     })
   })
