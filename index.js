@@ -46,47 +46,29 @@ async function query (receiver) {
 
 async function pay (plugin, {
   receiver,
-  sourceAmount
+  sourceAmount,
+  minAmount,
+  maxAmount
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
   const response = await query(receiver)
 
-  let amount = sourceAmount
-  if (!amount) {
-    if (!response.balance && typeof response.balance === 'object') {
-      throw new Error('receiver must be an invoice ' +
-        'OR sourceAmount must be specified. ' +
-        'response=' + JSON.stringify(response))
-    }
-
-    amount = response.balance.minimum
-      ? response.balance.minimum + response.balance.current
-      : response.balance.maximum - response.balance.current
-  }
-
-  const desiredBalance = new BigNumber(amount).negated()
-
   await plugin.connect()
   const socket = await createSocket({
     plugin,
     destinationAccount: response.destinationAccount,
-    sharedSecret: response.sharedSecret
+    sharedSecret: response.sharedSecret,
+    minBalance: '-Infinity' || minAmount,
+    maxAmount: 'Infinity' || maxAmount
   })
 
-  socket.setMinAndMaxBalance(desiredBalance.toString())
-  return new Promise(resolve => {
-    socket.on('chunk', () => {
-      if (desiredBalance.lt(0)
-        ? desiredBalance.gte(socket.balance)
-        : desiredBalance.lte(socket.balance)) {
-          setImmediate(() => {
-            socket.close()
-            resolve()
-          })
-      }
-    })
-  })
+  if (sourceAmount) {
+    const desiredBalance = new BigNumber(sourceAmount).negated()
+    await socket.setMinAndMaxBalance()
+  }
+
+  return socket.stabilized()
 }
 
 module.exports = {
