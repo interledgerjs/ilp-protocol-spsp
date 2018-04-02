@@ -1,4 +1,4 @@
-const { sendSingleChunk } = require('ilp-protocol-psk2')
+const { createConnection } = require('ilp-protocol-stream')
 const { URL } = require('url')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
@@ -51,13 +51,18 @@ async function pay (plugin, {
 }) {
   await plugin.connect()
   const response = await query(receiver)
-  return sendSingleChunk(plugin, {
+
+  const ilpConn = createConnection({
+    plugin,
     destinationAccount: response.destinationAccount,
-    sharedSecret: response.sharedSecret,
-    minDestinationAmount: '0',
-    lastChunk: true,
-    sourceAmount
+    sharedSecret: response.sharedSecret
   })
+
+  const payStream = ilpConn.createMoneyStream()
+
+  // TODO: do we need to close the connection/stream?
+  // TODO: should this await sendTotal or just send as much as the receiver will accept?
+  return payStream.sendTotal(sourceAmount)
 }
 
 module.exports = {
