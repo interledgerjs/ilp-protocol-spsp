@@ -2,6 +2,7 @@ const { createConnection } = require('ilp-protocol-stream')
 const { URL } = require('url')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
+const MAX_SEND_AMOUNT = '18446744073709551615'
 
 // utility function for converting query response
 function toCamelCase (obj) {
@@ -52,7 +53,13 @@ async function pay (plugin, {
   await plugin.connect()
   const response = await query(receiver)
 
-  const ilpConn = createConnection({
+  // TODO: should this be more explicit?
+  let sendAmount = sourceAmount 
+  if (response.balance && !sourceAmount) {
+    sendAmount = MAX_SEND_AMOUNT
+  }
+
+  const ilpConn = await createConnection({
     plugin,
     destinationAccount: response.destinationAccount,
     sharedSecret: response.sharedSecret
@@ -60,9 +67,10 @@ async function pay (plugin, {
 
   const payStream = ilpConn.createMoneyStream()
 
-  // TODO: do we need to close the connection/stream?
-  // TODO: should this await sendTotal or just send as much as the receiver will accept?
-  return payStream.sendTotal(sourceAmount)
+  return Promise.race([
+    payStream.sendTotal(sendAmount),
+    new Promise(resolve => payStream.on('end', resolve))
+  ])
 }
 
 module.exports = {
