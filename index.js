@@ -65,7 +65,7 @@ async function pay (plugin, {
     sharedSecret: response.sharedSecret
   })
 
-  const payStream = ilpConn.createMoneyStream()
+  const payStream = ilpConn.createStream()
 
   return Promise.race([
     payStream.sendTotal(sendAmount),
