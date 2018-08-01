@@ -1,4 +1,5 @@
 const { createConnection } = require('ilp-protocol-stream')
+const { sendSingleChunk } = require('ilp-protocol-psk2')
 const { URL } = require('url')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
@@ -31,8 +32,16 @@ async function query (receiver) {
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint.href, {
-    headers: { accept: 'application/spsp+json' }
+    headers: { accept: 'application/spsp4+json, application/spsp+json' }
   })
+
+  if (response.status !== 200) {
+    throw new Error('got error response from spsp receiver.' +
+      ' endpoint="' + endpoint.href + '"' +
+      ' status=' + response.status +
+      ' message="' + (await response.text()) + '"')
+  }
+
   const json = await response.json()
 
   return toCamelCase({
@@ -40,7 +49,8 @@ async function query (receiver) {
     shared_secret: Buffer.from(json.shared_secret, 'base64'),
     balance: json.balance,
     ledger_info: json.ledger_info,
-    receiver_info: json.receiver_info
+    receiver_info: json.receiver_info,
+    content_type: response.headers.get('content-type')
   })
 }
 
@@ -59,18 +69,32 @@ async function pay (plugin, {
     sendAmount = MAX_SEND_AMOUNT
   }
 
-  const ilpConn = await createConnection({
-    plugin,
-    destinationAccount: response.destinationAccount,
-    sharedSecret: response.sharedSecret
-  })
+  if (response.contentType.indexOf('application/spsp4+json') !== -1) {
+    const ilpConn = await createConnection({
+      plugin,
+      destinationAccount: response.destinationAccount,
+      sharedSecret: response.sharedSecret
+    })
 
-  const payStream = ilpConn.createStream()
+    const payStream = ilpConn.createStream()
 
-  return Promise.race([
-    payStream.sendTotal(sendAmount),
-    new Promise(resolve => payStream.on('end', resolve))
-  ])
+    return Promise.race([
+      payStream.sendTotal(sendAmount).then(() => payStream.end()),
+      new Promise(resolve => payStream.on('end', resolve))
+    ])
+  // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
+  // This should technically check for application/spsp+json but due to a bug the old
+  // ilp-spsp-server was returning application/json instead, and this code should stay
+  // compatible with it.
+  } else {
+    return sendSingleChunk(plugin, {
+      destinationAccount: response.destinationAccount,
+      sharedSecret: response.sharedSecret,
+      minDestinationAmount: '0',
+      lastChunk: true,
+      sourceAmount
+    })
+  }
 }
 
 module.exports = {
