@@ -9,7 +9,8 @@ Based on [PSK2](https://github.com/emschwartz/ilp-protocol-psk2).
 
 ### Simple Usage
 
-Sends a single-chunk PSK payment. Great for micro-payments or micro-donations inside of a script.
+Sends a single-chunk PSK payment or a STREAM payment, if the server supports
+it. Great for micro-payments or micro-donations inside of a script.
 
 ```js
 await SPSP.pay(plugin, {
@@ -21,7 +22,7 @@ await SPSP.pay(plugin, {
 ### Advanced Usage
 
 ```js
-// query the endpoint first
+// query the endpoint manually to construct a STREAM or PSK2 payment.
 const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
@@ -37,30 +38,7 @@ console.log(query)
 //   },
 //   receiverInfo: {
 //     name: 'Bob Dylan'
-//   }
+//   },
+//   contentType: 'application/spsp4+json'
 // }
-
-// you can send by destination amount with PSK2, for invoice behavior...
-await PSK2.sendDestinationAmount({
-  ...query, // for destinationAccount and sharedSecret
-  destinationAmount: query.balance.maximum
-})
-
-// ...or send by source amount with PSK2, if you want to do a chunked payment...
-await PSK2.sendSourceAmount({
-  ...query, // for destinationAccount and sharedSecret
-  sourceAmount: '10000000'
-})
-
-// ...or send one chunk at a time, for a streaming payment
-let sequence = 0
-const id = crypto.randomBytes(16)
-while (true) {
-  await PSK2.sendSingleChunk({
-    ...query,
-    sourceAmount: '200',
-    id,
-    sequence: sequence++
-  })
-}
 ```
