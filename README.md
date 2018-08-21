@@ -1,5 +1,7 @@
 # ILP Protocol SPSP
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/interledgerjs/ilp-protocol-spsp.svg)](https://greenkeeper.io/)
+
 ## Description
 
 Implements version 3 of the [Simple Payment Setup Protocol](https://github.com/interledger/rfcs/pull/367).
