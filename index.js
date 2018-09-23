@@ -56,7 +56,8 @@ async function query (receiver) {
 
 async function pay (plugin, {
   receiver,
-  sourceAmount
+  sourceAmount,
+  streamOpts = {}
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
@@ -73,7 +74,8 @@ async function pay (plugin, {
     const ilpConn = await createConnection({
       plugin,
       destinationAccount: response.destinationAccount,
-      sharedSecret: response.sharedSecret
+      sharedSecret: response.sharedSecret,
+      ...streamOpts
     })
 
     const payStream = ilpConn.createStream()
