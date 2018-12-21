@@ -18,12 +18,12 @@ function toCamelCase (obj) {
   return res
 }
 
-async function query (receiver) {
+async function query (pointer) {
   // TODO: further validation required on payment-pointer?
   // TODO: continue to support the old webfinger acct style?
-  const endpoint = new URL(receiver.startsWith('$')
-    ? 'https://' + receiver.substring(1)
-    : receiver)
+  const endpoint = new URL(pointer.startsWith('$')
+    ? 'https://' + pointer.substring(1)
+    : pointer)
 
   endpoint.pathname = endpoint.pathname === '/'
     ? '/.well-known/pay'
@@ -36,7 +36,7 @@ async function query (receiver) {
   })
 
   if (response.status !== 200) {
-    throw new Error('got error response from spsp receiver.' +
+    throw new Error('got error response from spsp payment pointer.' +
       ' endpoint="' + endpoint.href + '"' +
       ' status=' + response.status +
       ' message="' + (await response.text()) + '"')
@@ -55,14 +55,14 @@ async function query (receiver) {
 }
 
 async function pay (plugin, {
-  receiver,
+  pointer,
   sourceAmount,
   streamOpts = {}
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
   await plugin.connect()
-  const response = await query(receiver)
+  const response = await query(pointer)
 
   // TODO: should this be more explicit?
   let sendAmount = sourceAmount
@@ -100,11 +100,11 @@ async function pay (plugin, {
 }
 
 async function pull (plugin, {
-  subscription,
+  pointer,
   streamOpts = {}
 }) {
   await plugin.connect()
-  const response = await query(subscription)
+  const response = await query(pointer)
 
   if (response.contentType.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
@@ -118,7 +118,7 @@ async function pull (plugin, {
       stream.setReceiveMax(response.balance.amount)
 
       stream.on('money', amount => {
-        console.log('Pulled packet for ' + amount + ' units from ' + subscription)
+        console.log('Pulled packet for ' + amount + ' units from ' + pointer)
       })
 
       stream.on('data', data => {
