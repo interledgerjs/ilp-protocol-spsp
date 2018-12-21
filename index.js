@@ -28,7 +28,7 @@ async function query (receiver) {
   endpoint.pathname = endpoint.pathname === '/'
     ? '/.well-known/pay'
     : endpoint.pathname
- 
+
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint.href, {
@@ -65,7 +65,7 @@ async function pay (plugin, {
   const response = await query(receiver)
 
   // TODO: should this be more explicit?
-  let sendAmount = sourceAmount 
+  let sendAmount = sourceAmount
   if (response.balance && !sourceAmount) {
     sendAmount = MAX_SEND_AMOUNT
   }
@@ -84,10 +84,10 @@ async function pay (plugin, {
       payStream.sendTotal(sendAmount).then(() => payStream.end()),
       new Promise(resolve => payStream.on('end', resolve))
     ])
-  // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
-  // This should technically check for application/spsp+json but due to a bug the old
-  // ilp-spsp-server was returning application/json instead, and this code should stay
-  // compatible with it.
+    // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
+    // This should technically check for application/spsp+json but due to a bug the old
+    // ilp-spsp-server was returning application/json instead, and this code should stay
+    // compatible with it.
   } else {
     return sendSingleChunk(plugin, {
       destinationAccount: response.destinationAccount,
@@ -99,7 +99,46 @@ async function pay (plugin, {
   }
 }
 
+async function pull (plugin, {
+  subscription,
+  streamOpts = {}
+}) {
+  await plugin.connect()
+  const response = await query(subscription)
+
+  if (response.contentType.indexOf('application/spsp4+json') !== -1) {
+    const ilpConn = await createConnection({
+      plugin,
+      destinationAccount: response.destinationAccount,
+      sharedSecret: response.sharedSecret,
+      ...streamOpts
+    })
+
+    await ilpConn.on('stream', (stream) => {
+      stream.setReceiveMax(response.balance.amount)
+
+      stream.on('money', amount => {
+        console.log('Pulled packet for ' + amount + ' units from ' + subscription)
+      })
+
+      stream.on('data', data => {
+        console.log(data.toString('utf8'))
+      })
+    })
+  } else {
+    return null
+    // return sendSingleChunk(plugin, {
+    //   destinationAccount: response.destinationAccount,
+    //   sharedSecret: response.sharedSecret,
+    //   minDestinationAmount: '0',
+    //   lastChunk: true,
+    //   sourceAmount
+    // })
+  }
+}
+
 module.exports = {
   query,
-  pay
+  pay,
+  pull
 }
