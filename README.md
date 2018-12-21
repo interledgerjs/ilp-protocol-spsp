@@ -3,7 +3,6 @@
 ## Description
 
 Implements version 3 of the [Simple Payment Setup Protocol](https://github.com/interledger/rfcs/pull/367).
-Based on [PSK2](https://github.com/emschwartz/ilp-protocol-psk2).
 
 ## Example
 
@@ -14,15 +13,15 @@ it. Great for micro-payments or micro-donations inside of a script.
 
 ```js
 await SPSP.pay(plugin, {
-  receiver: '$bob.example.com',
+  pointer: '$bob.example.com',
   sourceAmount: '1000'
 })
 ```
 
 ### Advanced Usage
 
+Query the endpoint manually to construct a STREAM or PSK2 payment.
 ```js
-// query the endpoint manually to construct a STREAM or PSK2 payment.
 const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
@@ -41,4 +40,12 @@ console.log(query)
 //   },
 //   contentType: 'application/spsp4+json'
 // }
+```
+
+Make a pull payment from a dedicated pull payment server
+
+```js
+await SPSP.pull(plugin, {
+  pointer: '$subscriptions.example.com/f8095a44-c77f-4414-a19d-7aeca03f17c7'
+})
 ```
