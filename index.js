@@ -48,8 +48,11 @@ async function query (pointer) {
     destination_account: json.destination_account,
     shared_secret: Buffer.from(json.shared_secret, 'base64'),
     balance: json.balance,
-    ledger_info: json.ledger_info,
     receiver_info: json.receiver_info,
+    asset_info: json.asset_info,
+    pull_balance: json.pull_balance,
+    pull_info: json.pull_info,
+    ledger_info: json.ledger_info,
     content_type: response.headers.get('content-type')
   })
 }
@@ -115,25 +118,16 @@ async function pull (plugin, {
     })
 
     await ilpConn.on('stream', (stream) => {
-      stream.setReceiveMax(response.balance.amount)
+      stream.setReceiveMax(response.pullBalance.available)
 
       stream.on('money', amount => {
-        console.log('Pulled packet for ' + amount + ' units from ' + pointer)
-      })
-
-      stream.on('data', data => {
-        console.log(data.toString('utf8'))
+        console.log('pulled ' + amount + ' units!')
       })
     })
+    return new Promise(resolve => ilpConn.on('end', resolve))
   } else {
     return null
-    // return sendSingleChunk(plugin, {
-    //   destinationAccount: response.destinationAccount,
-    //   sharedSecret: response.sharedSecret,
-    //   minDestinationAmount: '0',
-    //   lastChunk: true,
-    //   sourceAmount
-    // })
+    // PSK2 Solution
   }
 }
 
