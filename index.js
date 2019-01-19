@@ -104,7 +104,9 @@ async function pay (plugin, {
 
 async function pull (plugin, {
   pointer,
-  streamOpts = {}
+  streamOpts = {},
+  callback,
+  callbackOpts = {}
 }) {
   await plugin.connect()
   const response = await query(pointer)
@@ -121,7 +123,7 @@ async function pull (plugin, {
       stream.setReceiveMax(response.pullBalance.available)
 
       stream.on('money', amount => {
-        console.log('pulled ' + amount + ' units!')
+        return callback(amount, callbackOpts)
       })
     })
     return new Promise(resolve => ilpConn.on('end', resolve))
