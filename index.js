@@ -50,8 +50,8 @@ async function query (pointer) {
     balance: json.balance,
     receiver_info: json.receiver_info,
     asset_info: json.asset_info,
-    pull_balance: json.pull_balance,
-    pull_info: json.pull_info,
+    frequency_info: json.frequency_info,
+    timeline_info: json.timeline_info,
     ledger_info: json.ledger_info,
     content_type: response.headers.get('content-type')
   })
@@ -120,7 +120,7 @@ async function pull (plugin, {
     })
 
     await ilpConn.on('stream', (stream) => {
-      stream.setReceiveMax(response.pullBalance.available)
+      stream.setReceiveMax(response.balance.current)
 
       stream.on('money', amount => {
         return callback(amount, callbackOpts)
