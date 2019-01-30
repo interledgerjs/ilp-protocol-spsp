@@ -119,12 +119,11 @@ async function pull (plugin, {
       ...streamOpts
     })
 
-    await ilpConn.on('stream', (stream) => {
-      stream.setReceiveMax(response.balance.current)
+    const stream = await ilpConn.createStream()
+    stream.setReceiveMax(response.balance.current)
 
-      stream.on('money', amount => {
-        return callback(amount, callbackOpts)
-      })
+    stream.on('money', amount => {
+      return callback(amount, callbackOpts)
     })
     return new Promise(resolve => ilpConn.on('end', resolve))
   } else {
