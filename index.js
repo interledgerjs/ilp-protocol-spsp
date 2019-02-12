@@ -43,18 +43,10 @@ async function query (pointer) {
   }
 
   const json = await response.json()
+  json.shared_secret = Buffer.from(json.shared_secret, 'base64')
+  json.content_type = response.headers.get('content-type')
 
-  return toCamelCase({
-    destination_account: json.destination_account,
-    shared_secret: Buffer.from(json.shared_secret, 'base64'),
-    balance: json.balance,
-    receiver_info: json.receiver_info,
-    asset_info: json.asset_info,
-    frequency_info: json.frequency_info,
-    timeline_info: json.timeline_info,
-    ledger_info: json.ledger_info,
-    content_type: response.headers.get('content-type')
-  })
+  return toCamelCase(json)
 }
 
 async function pay (plugin, {
@@ -109,8 +101,25 @@ async function pull (plugin, {
   callbackOpts = {}
 }) {
   await plugin.connect()
-  const response = await query(pointer)
 
+  let response
+  try {
+    response = await query(pointer)
+  } catch (err) {
+    const endpoint = new URL(pointer.startsWith('$')
+      ? 'https://' + pointer.substring(1)
+      : pointer)
+    const postResponse = await fetch(endpoint.href, {
+      method: 'post'
+    })
+    if (postResponse.status !== 200) {
+      throw new Error('got error response from spsp server.' +
+        ' endpoint="' + endpoint.href + '"' +
+        ' status=' + postResponse.status +
+        ' message="' + (await postResponse.text()) + '"')
+    }
+  }
+  response = await query(pointer)
   if (response.contentType.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
       plugin,
@@ -120,7 +129,7 @@ async function pull (plugin, {
     })
 
     const stream = await ilpConn.createStream()
-    stream.setReceiveMax(response.balance.current)
+    stream.setReceiveMax(Infinity)
 
     stream.on('money', amount => {
       return callback(amount, callbackOpts)
