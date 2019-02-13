@@ -96,11 +96,13 @@ async function pay (plugin, {
 
 async function pull (plugin, {
   pointer,
+  amount,
   streamOpts = {},
   callback,
   callbackOpts = {}
 }) {
   await plugin.connect()
+  const receiveMax = amount || Infinity
 
   let response
   try {
@@ -129,11 +131,14 @@ async function pull (plugin, {
     })
 
     const stream = await ilpConn.createStream()
-    stream.setReceiveMax(Infinity)
 
-    stream.on('money', amount => {
-      return callback(amount, callbackOpts)
-    })
+    try {
+      await stream.receiveTotal(receiveMax)
+      callback(receiveMax, callbackOpts)
+    } catch (err) {
+      const receivedAmount = Number(err.message.match(/totalReceived:\s([0-9]*)/)[1])
+      callback(receivedAmount, callbackOpts)
+    }
     return new Promise(resolve => ilpConn.on('end', resolve))
   } else {
     return null
