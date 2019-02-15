@@ -18,6 +18,18 @@ await SPSP.pay(plugin, {
 })
 ```
 
+Make a pull payment from a designated pull payment payment pointer.
+
+```js
+await SPSP.pull(plugin, {
+  pointer: '$bob.example.com/4139fb24-3ab6-4ea1-a6de-e8d761ff7569',
+  amount: '1000',
+  callback: function (pulledAmount) {
+    console.log('pulled ' + pulledAmount + ' units!')
+  }
+})
+```
+
 ### Advanced Usage
 
 Query the endpoint manually to construct a STREAM or PSK2 payment.
@@ -25,27 +37,9 @@ Query the endpoint manually to construct a STREAM or PSK2 payment.
 const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
-//   destinationAccount: 'test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I',
-//   sharedSecret: <Buffer 55 67 75 65 67 63 52 45 58 36 66 78 37 6f 70 56 ...>,
-//   balance: {
-//     maximum: '1000000',
-//     current: '0'
-//   },
-//   ledgerInfo: {
-//     currencyCode: 'XRP',
-//     currencyScale: 6
-//   },
-//   receiverInfo: {
-//     name: 'Bob Dylan'
-//   },
-//   contentType: 'application/spsp4+json'
+//   destinationAccount: "test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I",
+//   sharedSecret: "gk2jeNSwidKLeVq0f+QrOyemV8EHINNwQsw7b2GI9kg="
 // }
 ```
 
-Make a pull payment from a dedicated pull payment server
-
-```js
-await SPSP.pull(plugin, {
-  pointer: '$subscriptions.example.com/f8095a44-c77f-4414-a19d-7aeca03f17c7'
-})
-```
+The query may contain additional information. 
