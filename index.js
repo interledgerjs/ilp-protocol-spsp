@@ -74,11 +74,10 @@ async function pay (plugin, {
     })
 
     const payStream = ilpConn.createStream()
+    await payStream.sendTotal(sendAmount)
 
-    return Promise.race([
-      payStream.sendTotal(sendAmount).then(() => payStream.end()),
-      new Promise(resolve => payStream.on('end', resolve))
-    ])
+    ilpConn.end()
+    return new Promise(resolve => ilpConn.on('end', resolve))
     // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
     // This should technically check for application/spsp+json but due to a bug the old
     // ilp-spsp-server was returning application/json instead, and this code should stay
@@ -120,8 +119,9 @@ async function pull (plugin, {
         ' status=' + postResponse.status +
         ' message="' + (await postResponse.text()) + '"')
     }
+    response = await query(pointer)
   }
-  response = await query(pointer)
+
   if (response.contentType.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
       plugin,
@@ -134,11 +134,11 @@ async function pull (plugin, {
 
     try {
       await stream.receiveTotal(receiveMax)
-      callback(receiveMax, callbackOpts)
-    } catch (err) {
-      const receivedAmount = Number(err.message.match(/totalReceived:\s([0-9]*)/)[1])
-      callback(receivedAmount, callbackOpts)
-    }
+    } catch (err) {}
+
+    callback(stream.totalReceived, callbackOpts)
+
+    ilpConn.end()
     return new Promise(resolve => ilpConn.on('end', resolve))
   } else {
     return null
