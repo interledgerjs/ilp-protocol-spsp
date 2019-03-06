@@ -132,7 +132,7 @@ async function pull (plugin, {
     const stream = await ilpConn.createStream()
 
     try {
-      await stream.receiveTotal(receiveMax)
+      await stream.receiveTotal(receiveMax, { timeout: streamOpts.timeout })
     } catch (err) {}
 
     callback(stream.totalReceived, callbackOpts)
