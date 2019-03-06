@@ -28,7 +28,7 @@ async function query (receiver) {
   endpoint.pathname = endpoint.pathname === '/'
     ? '/.well-known/pay'
     : endpoint.pathname
- 
+
   // TODO: make sure that this fetch can never crash this node process. because
   // this could be called from autonomous code, that would pose big problems.
   const response = await fetch(endpoint.href, {
@@ -57,7 +57,9 @@ async function query (receiver) {
 async function pay (plugin, {
   receiver,
   sourceAmount,
-  streamOpts = {}
+  streamOpts = {},
+  callback,
+  callbackOpts = {}
   // TODO: do we need destinationAmount?
   // TODO: do we need application data?
 }) {
@@ -65,7 +67,7 @@ async function pay (plugin, {
   const response = await query(receiver)
 
   // TODO: should this be more explicit?
-  let sendAmount = sourceAmount 
+  let sendAmount = sourceAmount
   if (response.balance && !sourceAmount) {
     sendAmount = MAX_SEND_AMOUNT
   }
@@ -79,11 +81,13 @@ async function pay (plugin, {
     })
 
     const payStream = ilpConn.createStream()
+    await payStream.sendTotal(sendAmount)
 
-    return Promise.race([
-      payStream.sendTotal(sendAmount).then(() => payStream.end()),
-      new Promise(resolve => payStream.on('end', resolve))
-    ])
+    if (callback) {
+      callback(payStream.totalSent, callbackOpts)
+    }
+
+    await ilpConn.end()
   // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
   // This should technically check for application/spsp+json but due to a bug the old
   // ilp-spsp-server was returning application/json instead, and this code should stay
