@@ -76,8 +76,7 @@ async function pay (plugin, {
     const payStream = ilpConn.createStream()
     await payStream.sendTotal(sendAmount)
 
-    ilpConn.end()
-    return new Promise(resolve => ilpConn.on('end', resolve))
+    await ilpConn.end()
     // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
     // This should technically check for application/spsp+json but due to a bug the old
     // ilp-spsp-server was returning application/json instead, and this code should stay
@@ -138,11 +137,9 @@ async function pull (plugin, {
 
     callback(stream.totalReceived, callbackOpts)
 
-    ilpConn.end()
-    return new Promise(resolve => ilpConn.on('end', resolve))
+    await ilpConn.end()
   } else {
-    return null
-    // PSK2 Solution
+    // PSK2 Solution?
   }
 }
 
