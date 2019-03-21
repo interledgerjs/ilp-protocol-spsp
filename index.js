@@ -57,7 +57,8 @@ async function query (pointer) {
 }
 
 async function pay (plugin, {
-  pointer,
+  receiver,
+  pointer = receiver,
   sourceAmount,
   streamOpts = {}
   // TODO: do we need destinationAmount?
