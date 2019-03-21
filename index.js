@@ -149,7 +149,7 @@ async function pull (plugin, {
     await ilpConn.end()
     return totalReceived
   } else {
-    // PSK2 Solution?
+    throw new Error('Pull method is only supported by SPSP version 4 using STREAM.')
   }
 }
 
