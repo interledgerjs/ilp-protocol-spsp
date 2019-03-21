@@ -18,6 +18,13 @@ function toCamelCase (obj) {
   return res
 }
 
+class PullError extends Error {
+  constructor (message, totalReceived) {
+    super(message)
+    this.totalReceived = totalReceived
+  }
+}
+
 async function query (pointer) {
   // TODO: further validation required on payment-pointer?
   // TODO: continue to support the old webfinger acct style?
@@ -95,9 +102,7 @@ async function pay (plugin, {
 async function pull (plugin, {
   pointer,
   amount,
-  streamOpts = {},
-  callback,
-  callbackOpts = {}
+  streamOpts = {}
 }) {
   await plugin.connect()
   const receiveMax = amount || Infinity
@@ -133,13 +138,15 @@ async function pull (plugin, {
 
     try {
       await stream.receiveTotal(receiveMax, { timeout: streamOpts.timeout })
-    } catch (err) {}
-
-    if (callback) {
-      callback(stream.totalReceived, callbackOpts)
+    } catch (err) {
+      const totalReceived = stream.totalReceived
+      await ilpConn.end()
+      throw new PullError('Failed to receive specified amount', totalReceived)
     }
 
+    const totalReceived = stream.totalReceived
     await ilpConn.end()
+    return totalReceived
   } else {
     // PSK2 Solution?
   }
@@ -148,5 +155,6 @@ async function pull (plugin, {
 module.exports = {
   query,
   pay,
-  pull
+  pull,
+  PullError
 }
