@@ -84,9 +84,18 @@ async function pay (plugin, {
     })
 
     const payStream = ilpConn.createStream()
-    await payStream.sendTotal(sendAmount, { timeout: streamOpts.timeout })
 
+    try {
+      await payStream.sendTotal(sendAmount, { timeout: streamOpts.timeout })
+    } catch (err) {
+      const totalSent = payStream.totalSent
+      await ilpConn.end()
+      throw new PaymentError('Failed to send specified amount', { totalSent })
+    }
+
+    const totalSent = payStream.totalSent
     await ilpConn.end()
+    return { totalSent }
   // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
   // This should technically check for application/spsp+json but due to a bug the old
   // ilp-spsp-server was returning application/json instead, and this code should stay
