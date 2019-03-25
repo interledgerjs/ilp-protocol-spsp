@@ -147,7 +147,9 @@ async function pull (plugin, {
 
     const totalReceived = stream.totalReceived
     await ilpConn.end()
-    return totalReceived
+    return {
+      totalReceived: totalReceived
+    }
   } else {
     throw new Error('Pull method is only supported by SPSP version 4 using STREAM.')
   }
