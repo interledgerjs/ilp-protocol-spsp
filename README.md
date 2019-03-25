@@ -18,15 +18,12 @@ await SPSP.pay(plugin, {
 })
 ```
 
-Make a pull payment from a designated pull payment payment pointer.
+Make a pull payment from a designated pull payment pointer.
 
 ```js
 await SPSP.pull(plugin, {
   pointer: '$bob.example.com/4139fb24-3ab6-4ea1-a6de-e8d761ff7569',
-  amount: '1000',
-  callback: function (pulledAmount) {
-    console.log('pulled ' + pulledAmount + ' units!')
-  }
+  amount: '1000'
 })
 ```
 
