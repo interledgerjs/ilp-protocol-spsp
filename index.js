@@ -79,11 +79,9 @@ async function pay (plugin, {
     })
 
     const payStream = ilpConn.createStream()
+    await payStream.sendTotal(sendAmount, { timeout: streamOpts.timeout })
 
-    return Promise.race([
-      payStream.sendTotal(sendAmount).then(() => payStream.end()),
-      new Promise(resolve => payStream.on('end', resolve))
-    ])
+    await ilpConn.end()
   // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
   // This should technically check for application/spsp+json but due to a bug the old
   // ilp-spsp-server was returning application/json instead, and this code should stay
