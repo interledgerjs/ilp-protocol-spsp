@@ -18,9 +18,10 @@ function toCamelCase (obj) {
   return res
 }
 
-class PullError extends Error {
-  constructor (message, totalReceived) {
+class PaymentError extends Error {
+  constructor (message, { totalSent, totalReceived }) {
     super(message)
+    this.totalSent = totalSent
     this.totalReceived = totalReceived
   }
 }
@@ -82,13 +83,15 @@ async function pay (plugin, {
     })
 
     const payStream = ilpConn.createStream()
-    await payStream.sendTotal(sendAmount)
 
-    await ilpConn.end()
-    // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
-    // This should technically check for application/spsp+json but due to a bug the old
-    // ilp-spsp-server was returning application/json instead, and this code should stay
-    // compatible with it.
+    return Promise.race([
+      payStream.sendTotal(sendAmount).then(() => payStream.end()),
+      new Promise(resolve => payStream.on('end', resolve))
+    ])
+  // } else if (response.contentType.indexOf('application/spsp+json') !== -1) {
+  // This should technically check for application/spsp+json but due to a bug the old
+  // ilp-spsp-server was returning application/json instead, and this code should stay
+  // compatible with it.
   } else {
     return sendSingleChunk(plugin, {
       destinationAccount: response.destinationAccount,
@@ -108,24 +111,7 @@ async function pull (plugin, {
   await plugin.connect()
   const receiveMax = amount || Infinity
 
-  let response
-  try {
-    response = await query(pointer)
-  } catch (err) {
-    const endpoint = new URL(pointer.startsWith('$')
-      ? 'https://' + pointer.substring(1)
-      : pointer)
-    const postResponse = await fetch(endpoint.href, {
-      method: 'post'
-    })
-    if (postResponse.status !== 200) {
-      throw new Error('got error response from spsp server.' +
-        ' endpoint="' + endpoint.href + '"' +
-        ' status=' + postResponse.status +
-        ' message="' + (await postResponse.text()) + '"')
-    }
-    response = await query(pointer)
-  }
+  const response = await query(pointer)
 
   if (response.contentType.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
@@ -142,7 +128,7 @@ async function pull (plugin, {
     } catch (err) {
       const totalReceived = stream.totalReceived
       await ilpConn.end()
-      throw new PullError('Failed to receive specified amount', totalReceived)
+      throw new PaymentError('Failed to receive specified amount', { totalReceived })
     }
 
     const totalReceived = stream.totalReceived
@@ -159,5 +145,5 @@ module.exports = {
   query,
   pay,
   pull,
-  PullError
+  PaymentError
 }

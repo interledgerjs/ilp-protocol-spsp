@@ -2,7 +2,7 @@
 
 ## Description
 
-Implements version 3 of the [Simple Payment Setup Protocol](https://github.com/interledger/rfcs/pull/367).
+Implements version 4 of the [Simple Payment Setup Protocol](https://github.com/interledger/rfcs/pull/447).
 
 ## Example
 
@@ -28,7 +28,7 @@ try {
   })
   console.log(`pulled "${resp.totalReceived}"`)
 } catch (e) {
-  console.log(`pulled "${e instanceof SPSP.PullError ? e.totalReceived : 0}"`)
+  console.log(`pulled "${e instanceof SPSP.PaymentError ? e.totalReceived : 0}"`)
 }
 ```
 
@@ -40,8 +40,9 @@ const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
 //   destinationAccount: "test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I",
-//   sharedSecret: "gk2jeNSwidKLeVq0f+QrOyemV8EHINNwQsw7b2GI9kg="
+//   sharedSecret: "gk2jeNSwidKLeVq0f+QrOyemV8EHINNwQsw7b2GI9kg=",
+//   contentType: "application/spsp4+json"
 // }
 ```
 
-The query may contain additional information. 
+The query may contain additional information.
