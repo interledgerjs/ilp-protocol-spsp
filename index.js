@@ -3,6 +3,7 @@ const { sendSingleChunk } = require('ilp-protocol-psk2')
 const { URL } = require('url')
 const camelCase = require('lodash.camelcase')
 const fetch = require('node-fetch')
+const logger = require('ilp-logger')('ilp-protocol-spsp')
 const MAX_SEND_AMOUNT = '18446744073709551615'
 
 // utility function for converting query response
@@ -127,7 +128,11 @@ async function pull (plugin, {
       await stream.receiveTotal(receiveMax, { timeout: streamOpts.timeout })
     } catch (err) {
       const totalReceived = stream.totalReceived
-      await ilpConn.end()
+      try{
+        await ilpConn.end()
+      } catch (err) {
+        logger.debug('Idle timer expired before response packet was received when trying to end connection.')
+      }
       throw new PaymentError('Failed to receive specified amount', { totalReceived })
     }
 
