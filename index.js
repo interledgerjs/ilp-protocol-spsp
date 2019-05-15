@@ -131,7 +131,7 @@ async function pull (plugin, {
       try{
         await ilpConn.end()
       } catch (err) {
-        logger.debug('Idle timer expired before response packet was received when trying to end connection.')
+        logger.debug('Error while ending connection:', err)
       }
       throw new PaymentError('Failed to receive specified amount', { totalReceived })
     }
