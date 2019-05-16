@@ -40,7 +40,7 @@ const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
 //   destinationAccount: "test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I",
-//   sharedSecret: "gk2jeNSwidKLeVq0f+QrOyemV8EHINNwQsw7b2GI9kg=",
+//   sharedSecret: <Buffer 55 67 75 65 67 63 52 45 58 36 66 78 37 6f 70 56 ...>,
 //   contentType: "application/spsp4+json"
 // }
 ```
