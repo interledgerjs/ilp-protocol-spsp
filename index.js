@@ -89,7 +89,11 @@ async function pay (plugin, {
       await payStream.sendTotal(sendAmount, { timeout: streamOpts.timeout })
     } catch (err) {
       const totalSent = payStream.totalSent
-      await ilpConn.end()
+      try {
+        await ilpConn.end()
+      } catch (err) {
+        logger.debug('Error while ending connection:', err)
+      }
       throw new PaymentError('Failed to send specified amount', { totalSent })
     }
 
@@ -135,7 +139,7 @@ async function pull (plugin, {
       await stream.receiveTotal(receiveMax, { timeout: streamOpts.timeout })
     } catch (err) {
       const totalReceived = stream.totalReceived
-      try{
+      try {
         await ilpConn.end()
       } catch (err) {
         logger.debug('Error while ending connection:', err)
