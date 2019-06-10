@@ -13,6 +13,6 @@
     "ilp-protocol-psk2": "^0.5.0",
     "ilp-protocol-stream": "^1.8.9",
     "lodash.camelcase": "^4.3.0",
-    "node-fetch": "^1.7.3"
+    "node-fetch": "^2.6.0"
   }
 }

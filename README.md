@@ -44,9 +44,9 @@ Query the endpoint manually to construct a STREAM or PSK2 payment.
 const query = await SPSP.query('$bob.example.com')
 console.log(query)
 // {
-//   destinationAccount: "test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I",
-//   sharedSecret: <Buffer 55 67 75 65 67 63 52 45 58 36 66 78 37 6f 70 56 ...>,
-//   contentType: "application/spsp4+json"
+//   destination_account: "test.example.bob.LwNAw4ZEjlOwkc8xmaQRaRd37YRl8sixSCBPgEEqo8I",
+//   shared_secret: "RvqL/HJO3GinYIeujez/OEsBtX6+NtxJwabh7KthfOI=",
+//   content_type: "application/spsp4+json"
 // }
 ```
 

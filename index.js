@@ -6,19 +6,6 @@ const fetch = require('node-fetch')
 const logger = require('ilp-logger')('ilp-protocol-spsp')
 const MAX_SEND_AMOUNT = '18446744073709551615'
 
-// utility function for converting query response
-function toCamelCase (obj) {
-  if (obj === null) return null
-  let res = {}
-  for (const key of Object.keys(obj)) {
-    if (obj[key] === undefined) continue
-    res[camelCase(key)] = typeof obj.key === 'object'
-      ? toCamelCase(obj[key])
-      : obj[key]
-  }
-  return res
-}
-
 class PaymentError extends Error {
   constructor (message, { totalSent, totalReceived }) {
     super(message)
@@ -52,10 +39,9 @@ async function query (pointer) {
   }
 
   const json = await response.json()
-  json.shared_secret = Buffer.from(json.shared_secret, 'base64')
   json.content_type = response.headers.get('content-type')
 
-  return toCamelCase(json)
+  return json
 }
 
 async function pay (plugin, {
@@ -75,11 +61,11 @@ async function pay (plugin, {
     sendAmount = MAX_SEND_AMOUNT
   }
 
-  if (response.contentType.indexOf('application/spsp4+json') !== -1) {
+  if (response.content_type.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
       plugin,
-      destinationAccount: response.destinationAccount,
-      sharedSecret: response.sharedSecret,
+      destinationAccount: response.destination_account,
+      sharedSecret: Buffer.from(response.shared_secret, 'base64'),
       ...streamOpts
     })
 
@@ -106,8 +92,8 @@ async function pay (plugin, {
   // compatible with it.
   } else {
     return sendSingleChunk(plugin, {
-      destinationAccount: response.destinationAccount,
-      sharedSecret: response.sharedSecret,
+      destinationAccount: response.destination_account,
+      sharedSecret: Buffer.from(response.shared_secret, 'base64'),
       minDestinationAmount: '0',
       lastChunk: true,
       sourceAmount
@@ -125,11 +111,11 @@ async function pull (plugin, {
 
   const response = await query(pointer)
 
-  if (response.contentType.indexOf('application/spsp4+json') !== -1) {
+  if (response.content_type.indexOf('application/spsp4+json') !== -1) {
     const ilpConn = await createConnection({
       plugin,
-      destinationAccount: response.destinationAccount,
-      sharedSecret: response.sharedSecret,
+      destinationAccount: response.destination_account,
+      sharedSecret: Buffer.from(response.shared_secret, 'base64'),
       ...streamOpts
     })
 
